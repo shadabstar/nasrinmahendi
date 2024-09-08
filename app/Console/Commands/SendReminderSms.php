@@ -33,8 +33,17 @@ class SendReminderSms extends Command
      */
     public function handle()
     {
-        $today_date = Carbon::now()->format('Y-m-d');
-        $orders = Order::with('MembersData')->where('date', $today_date)->where('status', 0)->select('id', 'date', 'timing')->get();
+        // Get the date two days from today
+        $reminderDate = Carbon::now()->addDays(2)->format('Y-m-d');
+
+        // Fetch orders that are scheduled for that reminder date
+        $orders = Order::with('MembersData')
+            ->where('date', $reminderDate)
+            ->where('status', 0)
+            ->select('id', 'date', 'timing')
+            ->get();
+
+        // Get the name of the authenticated user sending the SMS
         $name = User::where('id', auth()->id())->value('name');
 
         foreach ($orders as $order) {
@@ -56,7 +65,6 @@ class SendReminderSms extends Command
         }
 
         $this->info('Reminder SMS sent successfully.');
-
     }
 
     protected function sendSms($msg, $mobileNumber)
